@@ -24,12 +24,16 @@ import { AutoPostModule } from './modules/auto-post/auto-post.module';
     CqrsModule.forRoot(),
     BullModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const password = configService.get<string>('REDIS_PASSWORD');
+        return {
+          connection: {
+            host: configService.get<string>('REDIS_HOST', 'localhost'),
+            port: configService.get<number>('REDIS_PORT', 6379),
+            ...(password ? { password } : {}),
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     PrismaModule,
