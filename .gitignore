@@ -1,0 +1,25 @@
+# Dependencies
+**/node_modules/
+
+# Build & Compilation directories
+**/dist/
+**/.next/
+**/out/
+**/build/
+**/coverage/
+
+# Credentials, Sessions & Environment variables
+**/.env
+**/.env*.local
+**/facebook-session.json
+**/*.pem
+**/*.key
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db

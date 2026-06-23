@@ -1,0 +1,122 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  FAILED
+}
+
+enum ScheduleStatus {
+  PENDING
+  PROCESSING
+  AWAITING_WORKER
+  SUCCESS
+  FAILED
+}
+
+enum LogLevel {
+  INFO
+  WARN
+  ERROR
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String         @unique
+  passwordHash  String
+  facebookPages FacebookPage[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("users")
+}
+
+model FacebookPage {
+  id                   String      @id @default(uuid()) @db.Uuid
+  userId               String      @db.Uuid
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId               String      @unique // Facebook's external Page ID
+  pageName             String
+  isActive             Boolean     @default(true)
+  schedules            Schedule[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  @@map("facebook_pages")
+}
+
+model Product {
+  id           String      @id @default(uuid()) @db.Uuid
+  title        String
+  description  String?
+  affiliateUrl String
+  imageUrl     String?
+  rawContent   String?
+  metadata     Json?
+  postDrafts   PostDraft[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("products")
+}
+
+model PostDraft {
+  id        String     @id @default(uuid()) @db.Uuid
+  productId String?    @db.Uuid
+  product   Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  content   String
+  mediaUrls String[]
+  status    PostStatus @default(DRAFT)
+  schedules Schedule[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("post_drafts")
+}
+
+model Schedule {
+  id                String         @id @default(uuid()) @db.Uuid
+  postDraftId       String         @db.Uuid
+  postDraft         PostDraft      @relation(fields: [postDraftId], references: [id], onDelete: Cascade)
+  facebookPageId    String         @db.Uuid
+  facebookPage      FacebookPage   @relation(fields: [facebookPageId], references: [id], onDelete: Cascade)
+  postTime          DateTime
+  status            ScheduleStatus @default(PENDING)
+  retryCount        Int            @default(0)
+  facebookPostId    String?        // Moved from PostDraft to enable multi-page/multi-post tracking
+  facebookCommentId String?        // Track the affiliate link comment ID
+  errorMessage      String?        // Logs why posting/commenting failed
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@map("schedules")
+}
+
+model WorkflowLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  level     LogLevel @default(INFO)
+  context   String
+  message   String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@map("workflow_logs")
+}
+
+model AutoPostLink {
+  id           String   @id @default(uuid()) @db.Uuid
+  url          String
+  status       String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("auto_post_links")
+}

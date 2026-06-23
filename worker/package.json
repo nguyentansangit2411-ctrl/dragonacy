@@ -1,0 +1,21 @@
+{
+  "name": "dragonacy-worker",
+  "version": "1.0.0",
+  "description": "Local Facebook Worker for Auto Posting System",
+  "main": "dist/index.js",
+  "scripts": {
+    "login": "ts-node src/login.ts",
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.44.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
